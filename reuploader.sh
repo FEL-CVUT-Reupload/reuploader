@@ -79,14 +79,14 @@ case $source in
 	;;
 	4) # youtube static
 		# tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
-		youtube-dl -f "$ytformat" "$url" -o "video.%(ext)s"
+		youtube-dl --fragment-retries infinite -f "$ytformat" "$url" -o "video.%(ext)s"
 		tmp_filename=$(ls -t | grep -E "video.*$" | head -n1)
 	;;
 	5) # youtube livestream
 		tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
 		
 		set -m  # SIGINT is ignored when job control is disabled!!!
-		youtube-dl -f "$ytformat" "$url" -o "video.%(ext)s" &
+		youtube-dl --fragment-retries infinite -f "$ytformat" "$url" -o "video.%(ext)s" &
 		PID=$!
 		sleep "$rectime"
 		kill -INT $PID
