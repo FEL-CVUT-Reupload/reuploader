@@ -19,8 +19,6 @@ RUN apt-get -y install libnss3 libgbm1
 RUN useradd -m user
 USER user
 WORKDIR /home/user
-RUN pwd
-RUN ls -la
 
 # install youtube uploader
 RUN git clone https://github.com/linouk23/youtube_uploader_selenium.git
@@ -35,11 +33,7 @@ WORKDIR /home/user
 
 # reuploader script
 COPY reuploader.sh reuploader.sh
-#RUN chmod +x reuploader.sh
 
-
-
-RUN pwd
 
 # CMD ["/usr/bin/bash"]
 CMD ["/usr/bin/bash", "reuploader.sh"]
