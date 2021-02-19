@@ -34,11 +34,12 @@ echo "  2. bbb internal player"
 echo "  3. microsoft stream (teams)"
 echo "  4. youtube video"
 echo "  5. youtube livestream"
+echo "  6. sharepoint (teams)"
 read -p "Source: " -e source
 read -p "URL/URI: " -e url
 
 case $source in
-	3) # microsoft stream (teams)
+	3|6) # microsoft stream (teams)
 		read -p "ČVUT username: " -e username
 		read -p "ČVUT password: " -e password
 	;;
@@ -94,6 +95,10 @@ case $source in
 		
 		# wait for the youtube-dl to spin down
 		sleep 20s
+	;;
+	6) # sharepoint
+		tmp_filename="~/sharepoint_downloader/video"
+		node ./sharepoint_downloader/index.js -u "$username" -p "$password" -i "$url" -o "$tmp_filename"
 	;;
 	*)
 		echo -e "\033[31mUnknown video source!\033[0m"

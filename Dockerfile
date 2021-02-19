@@ -31,6 +31,12 @@ RUN npm install
 RUN npm run build
 WORKDIR /home/user
 
+# install sharepoint downloader
+RUN git clone https://github.com/FEL-CVUT-Reupload/sharepoint_downloader.git
+WORKDIR /home/user/sharepoint_downloader
+RUN npm install
+WORKDIR /home/user
+
 # reuploader script
 COPY reuploader.sh reuploader.sh
 
