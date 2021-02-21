@@ -1,0 +1,13 @@
+{
+	"name": "reuploader",
+	"private": true,
+	"workspaces": [
+		"destreamer",
+		"sharepoint_downloader"
+	],
+	"devDependencies": {
+		"@types/node": "^14.14.31",
+		"axios": "^0.21.1",
+		"logform": "^2.2.0"
+	}
+}

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+NODE_EXEC=${NODE_EXEC:-"node"}
+
 set -e
 export LANG=C.UTF-8
 
@@ -95,7 +97,7 @@ case $source in
 			chown user:user destreamer/.token_cache
 		fi
 		cd destreamer/
-		sudo -u user xvfb-run ./destreamer.sh --outputDirectory "." --format mp4 -x -k -u "$username@cvut.cz" -p "$password" -i "$url"
+		sudo -u user NODE_EXEC="$NODE_EXEC" xvfb-run ./destreamer.sh --outputDirectory "." --format mp4 -x -k -u "$username@cvut.cz" -p "$password" -i "$url"
 		tmp_filename=$(ls -t | grep -E "*.mp4$" | head -n1)
 		tmp_filename=$(readlink -f "$tmp_filename")
 		cd ../
@@ -124,7 +126,7 @@ case $source in
 	;;
 	6) # sharepoint
 		tmp_filename="sharepoint_downloader/video"
-		node ./sharepoint_downloader/index.js -u "$username" -p "$password" -i "$url" -o "$tmp_filename"
+		$NODE_EXEC ./sharepoint_downloader/index.js -u "$username" -p "$password" -i "$url" -o "$tmp_filename"
 		tmp_filename=$(readlink -f "$tmp_filename")
 	;;
 	*)
