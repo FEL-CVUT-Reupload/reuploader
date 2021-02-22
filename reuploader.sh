@@ -78,7 +78,7 @@ case $source in
 		tmp_filename="$url"
 	;;
 	1) # any video url
-		tmp_filename="video.${url##*.}"
+		tmp_filename="video"
 		wget "$url" -O "$tmp_filename"
 		tmp_filename=$(readlink -f "$tmp_filename")
 	;;
