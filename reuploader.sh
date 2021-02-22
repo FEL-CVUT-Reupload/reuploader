@@ -129,6 +129,11 @@ case $source in
 		$NODE_EXEC ./sharepoint_downloader/index.js -u "$username" -p "$password" -i "$url" -o "$tmp_filename"
 		tmp_filename=$(readlink -f "$tmp_filename")
 	;;
+	7) # google drive
+		tmp_filename="video"
+		./gdown.pl/gdown.pl "$url" "$tmp_filename"
+		tmp_filename=$(readlink -f "$tmp_filename")
+	;;
 	*)
 		echo -e "\033[31mUnknown video source!\033[0m"
 		exit 1
