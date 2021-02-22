@@ -21,26 +21,33 @@ RUN useradd -m user
 #USER user
 WORKDIR /src
 
+# install and configure yarn
+RUN wget -O - https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get update && apt-get -y install yarn
+
+COPY workspace_package.json package.json
+RUN yarn set version berry
+RUN yarn plugin import workspace-tools
+
 # install youtube uploader
 RUN git clone https://github.com/FEL-CVUT-Reupload/youtube_uploader_selenium.git
 RUN pip3 install -r /src/youtube_uploader_selenium/requirements.txt
 
 # install destreamer
 RUN git clone https://github.com/FEL-CVUT-Reupload/destreamer.git
-WORKDIR /src/destreamer
-RUN npm install
-RUN npm run build
-WORKDIR /src
 RUN chown -R user:user /src/destreamer
 
 # install sharepoint downloader
 RUN git clone https://github.com/FEL-CVUT-Reupload/sharepoint_downloader.git
-WORKDIR /src/sharepoint_downloader
-RUN npm install
-WORKDIR /src
+
+# install yarn dependencies
+RUN yarn install
+RUN yarn workspace destreamer tsc
 
 # reuploader script
 COPY reuploader.sh reuploader.sh
 
 # CMD ["/usr/bin/bash"]
+ENV NODE_EXEC "yarn node"
 CMD ["/usr/bin/bash", "reuploader.sh"]
