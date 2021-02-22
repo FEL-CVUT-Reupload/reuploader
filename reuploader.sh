@@ -4,11 +4,11 @@ NODE_EXEC=${NODE_EXEC:-"node"}
 set -e
 export LANG=C.UTF-8
 
-read -p "Subject code: " -e subject
+read -r -p "Subject code: " -e subject
 subject=$(echo "$subject" | tr '[:lower:]' '[:upper:]')
 
-read -p "Lecture number: " -e lecnum
-read -p "Lecture type (p|c): " -e code
+read -r -p "Lecture number: " -e lecnum
+read -r -p "Lecture type (p|c): " -e code
 
 case "$code" in 
 	"p") 
@@ -25,10 +25,10 @@ case "$code" in
 	;;
 esac
 
-read -p "Date string: " -i "$(date +'%-d. %-m. %Y')" -e datestr
-read -p "Semester: " -i "LS 20/21" -e semester
-read -p "Lecture title: " -e lectitle
-read -p "Video description: " -e description
+read -r -p "Date string: " -i "$(date +'%-d. %-m. %Y')" -e datestr
+read -r -p "Semester: " -i "LS 20/21" -e semester
+read -r -p "Lecture title: " -e lectitle
+read -r -p "Video description: " -e description
 echo
 echo "Available sources:" 
 echo "  0. local file"
@@ -38,8 +38,9 @@ echo "  3. microsoft stream (teams)"
 echo "  4. youtube video"
 echo "  5. youtube livestream"
 echo "  6. sharepoint (teams)"
-read -p "Source: " -e source
-read -p "URL/URI: " -e url
+echo "  7. google drive"
+read -r -p "Source: " -e source
+read -r -p "URL/URI: " -e url
 
 
 if [[ "$source" == "6" ]] || [[ ! -f cookies/youtube.com.pkl ]]; then
@@ -51,12 +52,12 @@ if [[ "$source" == "3" ]] && test "$(find cookies/.token_cache -mmin +60 2>/dev/
 fi
 
 if [[ -n "$login" ]]; then
-	read -p "ČVUT username: " -e username
-	read -s -p "ČVUT password: " -e password
+	read -r -p "ČVUT username: " -e username
+	read -r -s -p "ČVUT password: " -e password
 fi
 
 if [[ "$source" == "5" ]]; then
-	read -p "Recording time: " -i "2h" -e rectime
+	read -r -p "Recording time: " -i "2h" -e rectime
 fi
 
 
