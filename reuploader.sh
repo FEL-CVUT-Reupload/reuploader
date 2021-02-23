@@ -29,18 +29,23 @@ read -r -p "Date string: " -i "$(date +'%-d. %-m. %Y')" -e datestr
 read -r -p "Semester: " -i "LS 20/21" -e semester
 read -r -p "Lecture title: " -e lectitle
 read -r -p "Video description: " -e description
-echo
-echo "Available sources:"
-echo "  0. local file"
-echo "  1. any video url"
-echo "  2. bbb internal player"
-echo "  3. microsoft stream (teams)"
-echo "  4. youtube video"
-echo "  5. youtube livestream"
-echo "  6. sharepoint (teams)"
-echo "  7. google drive"
-read -r -p "Source: " -e source
-read -r -p "URL/URI: " -e url
+
+if [[ -f "/mnt/local_video" ]]; then
+	source=0
+	url="/mnt/local_video"
+else
+	echo "Available sources:"
+	echo "  0. local file"
+	echo "  1. any video url"
+	echo "  2. bbb internal player"
+	echo "  3. microsoft stream (teams)"
+	echo "  4. youtube video"
+	echo "  5. youtube livestream"
+	echo "  6. sharepoint (teams)"
+	echo "  7. google drive"
+	read -r -p "Source: " -e source
+	read -r -p "URL/URI: " -e url
+fi
 
 if [[ "$source" == "6" ]] || [[ ! -f cookies/youtube.com.pkl ]]; then
 	login=true
