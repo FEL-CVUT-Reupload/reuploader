@@ -82,7 +82,20 @@ case $source in
 		;;
 	1) # any video url
 		tmp_filename="video"
-		wget "$url" -O "$tmp_filename"
+
+		while true; do
+			set +e
+			wget --http-user="$http_username" --http-password="$http_password" "$url" -O "$tmp_filename"
+			status="$?"
+			set -e
+			if [[ "$status" == "6" ]]; then
+				read -r -p "HTTP username: " -e http_username
+				read -r -s -p "HTTP password: " -e http_password
+			else
+				break
+			fi
+		done
+
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
 	2) # bbb-internal
