@@ -7,12 +7,6 @@ export LANG=C.UTF-8
 cache_path="/mnt"
 channel="UCzQzKzGlpX4qBi060qdwIug"
 
-
-
-# TODO: function to do all the fzf selections. ctrl-c vyrobi exit code 130, ale spatnej input vygeneruje exit code 1, tohle taky vzit v potaz a killnout program pokud exit code bude 130.
-
-
-
 while true; do
 	echo "Metadata template:"
 	types=("přednáška" "cvičení" "seminář" "<custom>")
