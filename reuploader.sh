@@ -7,6 +7,12 @@ export LANG=C.UTF-8
 cache_path="/mnt"
 channel="UCzQzKzGlpX4qBi060qdwIug"
 
+
+
+# TODO: function to do all the fzf selections. ctrl-c vyrobi exit code 130, ale spatnej input vygeneruje exit code 1, tohle taky vzit v potaz a killnout program pokud exit code bude 130.
+
+
+
 while true; do
 	echo "Metadata template:"
 	types=("přednáška" "cvičení" "seminář" "<custom>")
@@ -64,7 +70,7 @@ while true; do
 
 	read -p "Okay? [Y/n] " -n 1 -r
 	echo
-	if [[ $REPLY =~ ^[Yy]?$ ]]; then
+	if [[ $REPLY =~ ^[YyJj]?$ ]]; then
 		break
 	fi
 	echo
@@ -105,6 +111,7 @@ while true; do
 	if [[ "$status" == "7" ]]; then
 		read -r -p "ČVUT username: "  -e cvut_username
 		read -r -s -p "ČVUT password: "  -e cvut_password
+		echo
 	else
 		break
 	fi
@@ -129,6 +136,7 @@ case "$source" in
 			if [[ "$status" == "6" ]]; then
 				read -r -p "HTTP username: " -e http_username
 				read -r -s -p "HTTP password: " -e http_password
+				echo
 			else
 				break
 			fi
@@ -146,17 +154,26 @@ case "$source" in
 		cd ../
 		;;
 	"microsoft stream (teams)")
-		if [[ -f cookies/.token_cache ]]; then
-			cp -v cookies/.token_cache destreamer/
-			chown user:user destreamer/.token_cache
-		fi
 		cd destreamer/
-		sudo -u user NODE_EXEC="$NODE_EXEC" xvfb-run ./destreamer.sh --outputDirectory "." --format mp4 -x -k -u "$username@cvut.cz" -p "$password" -i "$url"
+
+		while true; do
+			set +e
+			sudo -u user NODE_EXEC="$NODE_EXEC" xvfb-run ./destreamer.sh --outputDirectory "." --format mp4 -x -u "$cvut_username@cvut.cz" -p "$cvut_password" -k -c "$cache_path" -i "$url"
+			status="$?"
+			set -e
+			if [[ "$status" == "7" ]]; then
+				read -r -p "ČVUT username: "  -e cvut_username
+				read -r -s -p "ČVUT password: "  -e cvut_password
+				echo
+			else
+				break
+			fi
+		done
+
 		tmp_filename=$(ls -t | grep -E "*.mp4$" | head -n1)
 		tmp_filename=$(readlink -f "$tmp_filename")
-		cd ../
 
-		cp -uv destreamer/.token_cache cookies/.token_cache
+		cd ../
 		;;
 	"youtube video")
 		# tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
@@ -181,7 +198,21 @@ case "$source" in
 		;;
 	"sharepoint (teams)")
 		tmp_filename="sharepoint_downloader/video"
-		$NODE_EXEC ./sharepoint_downloader/index.js -u "$cvut_username" -p "$cvut_password" -i "$url" -o "$tmp_filename"
+
+		while true; do
+			set +e
+			$NODE_EXEC ./sharepoint_downloader/index.js -u "$cvut_username" -p "$cvut_password" --chromeData "$cache_path" -i "$url" -o "$tmp_filename"
+			status="$?"
+			set -e
+			if [[ "$status" == "7" ]]; then
+				read -r -p "ČVUT username: "  -e cvut_username
+				read -r -s -p "ČVUT password: "  -e cvut_password
+				echo
+			else
+				break
+			fi
+		done
+
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
 	"google drive")
