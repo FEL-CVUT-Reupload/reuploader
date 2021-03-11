@@ -4,83 +4,121 @@ NODE_EXEC=${NODE_EXEC:-"node"}
 set -e
 export LANG=C.UTF-8
 
-read -r -p "Subject code: " -e subject
-subject=$(echo "$subject" | tr '[:lower:]' '[:upper:]')
+cache_path="/mnt"
+channel="UCzQzKzGlpX4qBi060qdwIug"
 
-read -r -p "Lecture number: " -e lecnum
-read -r -p "Lecture type (p|c): " -e code
+while true; do
+	echo "Metadata template:"
+	types=("přednáška" "cvičení" "seminář" "<custom>")
+	template=$(while ! IFS=$'\n' eval 'echo -e "${types[*]}"' | fzf --height=5 --reverse --color=16 --no-info; do true; done)
+	echo -e "\e[AVideo template: $template"
 
-case "$code" in
-	"p")
-		category1="přednáška"
-		categoryN="přednášky"
-		;;
-	"c")
-		category1="cvičení"
-		categoryN="cvičení"
-		;;
-	*)
-		echo -e "\033[31mUnknown lecture type!\033[0m"
-		exit 1
-		;;
-esac
+	if [[ "$template" == "<custom>" ]]; then
+		read -r -p "Video title: " -e video_title
+		read -r -p "Video description: " -e video_description
+		read -r -p "Playlist: " -e video_playlist
+		echo "Video visibility:"
+		visibilities=("unlisted" "public" "private")
+		video_visibility=$(while ! IFS=$'\n' eval 'echo -e "${visibilities[*]}"' | fzf --height=4 --reverse --color=16 --no-info; do true; done)
+		echo -e "\e[AVideo visibility: $video_visibility"
+	else
+		read -r -p "Subject code: " -e subject
+		read -r -p "Lecture number: " -e lecnum
+		read -r -p "Date string: " -i "$(date +'%-d. %-m. %Y')" -e datestr
+		read -r -p "Semester: " -i "LS 20/21" -e semester
+		read -r -p "Lecture title: " -e lectitle
+		read -r -p "Video description: " -e video_description
 
-read -r -p "Date string: " -i "$(date +'%-d. %-m. %Y')" -e datestr
-read -r -p "Semester: " -i "LS 20/21" -e semester
-read -r -p "Lecture title: " -e lectitle
-read -r -p "Video description: " -e description
+		case "$template" in
+			"přednáška")
+				category1="přednáška"
+				categoryN="přednášky"
+				;;
+			"cvičení")
+				category1="cvičení"
+				categoryN="cvičení"
+				;;
+			"seminář")
+				category1="seminář"
+				categoryN="semináře"
+				;;
+			*)
+				echo -e "\033[31mUnknown lecture type!\033[0m"
+				exit 1
+				;;
+		esac
 
-if [[ -f "/mnt/local_video" ]]; then
+		test -n "$lectitle" && lectitle=": $lectitle"
+		subject=$(echo "$subject" | tr '[:lower:]' '[:upper:]')
+		video_title="$subject $lecnum. $category1 ($datestr)$lectitle"
+		video_playlist="$subject $categoryN [$semester]"
+		video_visibility="unlisted"
+	fi
+
+	echo -e "\033[34m"
+	echo "Title: $video_title"
+	echo "Description: $video_description"
+	echo "Playlist: $video_playlist"
+	echo "Visibility: $video_visibility"
+	echo -e "\033[0m"
+
+	read -p "Okay? [Y/n] " -n 1 -r
+	echo
+	if [[ $REPLY =~ ^[Yy]?$ ]]; then
+		break
+	fi
+	echo
+done
+
+if [[ -f "local_video" ]]; then
 	source=0
-	url="/mnt/local_video"
+	url="local_video"
 else
-	echo "Available sources:"
-	echo "  0. local file"
-	echo "  1. any video url"
-	echo "  2. bbb internal player"
-	echo "  3. microsoft stream (teams)"
-	echo "  4. youtube video"
-	echo "  5. youtube livestream"
-	echo "  6. sharepoint (teams)"
-	echo "  7. google drive"
-	read -r -p "Source: " -e source
+	echo "Source:"
+	sources=(
+		# "local file"
+		"any video url"
+		# "bbb internal player"
+		"google drive"
+		"microsoft stream (teams)"
+		"sharepoint (teams)"
+		"youtube video"
+		"youtube livestream"
+	)
+	source=$(while ! IFS=$'\n' eval 'echo -e "${sources[*]}"' | fzf --height=7 --reverse --color=16 --no-info; do true; done)
+	echo -e "\e[ASource: $source"
+
+	if [[ "$source" == "youtube livestream" ]]; then
+		read -r -p "Recording time: " -i "2h" -e rectime
+	fi
+
 	read -r -p "URL/URI: " -e url
 fi
 
-if [[ "$source" == "6" ]] || [[ ! -f cookies/youtube.com.pkl ]]; then
-	login=true
-fi
-
-if [[ "$source" == "3" ]] && test "$(find cookies/.token_cache -mmin +60 2>/dev/null)"; then
-	login=true
-fi
-
-if [[ -n "$login" ]]; then
-	read -r -p "ČVUT username: " -e username
-	read -r -s -p "ČVUT password: " -e password
-fi
-
-if [[ "$source" == "5" ]]; then
-	read -r -p "Recording time: " -i "2h" -e rectime
-fi
-
-test -n "$lectitle" && lectitle=": $lectitle"
-
 echo
-echo -e "\033[34m"
-echo "Title: $subject $lecnum. $category1 ($datestr)$lectitle"
-echo "Description: $description"
-echo "Playlist: $subject $categoryN [$semester]"
-echo -e "\033[0m"
+echo "Logging in to YouTube..."
+while true; do
+	set +e
+	python3 youtube_uploader_selenium/login.py --channel="$channel" --username="$cvut_username" --password="$cvut_password" --cookies="$cache_path" --headless
+	status="$?"
+	set -e
+	if [[ "$status" == "7" ]]; then
+		read -r -p "ČVUT username: "  -e cvut_username
+		read -r -s -p "ČVUT password: "  -e cvut_password
+	else
+		break
+	fi
+done
 
 # not bigger than 1080p, vp9 preferred
 ytformat='bestvideo[vcodec^=vp9][height<=1080]+bestaudio/best[vcodec^=vp9][height<=1080]/bestvideo[height<=1080]+bestaudio/best[height<=1080]'
 
-case $source in
-	0) # local file
+echo
+case "$source" in
+	"local file")
 		tmp_filename="$url"
 		;;
-	1) # any video url
+	"any video url")
 		tmp_filename="video"
 
 		while true; do
@@ -98,7 +136,7 @@ case $source in
 
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
-	2) # bbb-internal
+	"bbb internal player")
 		echo "bbb-internal is not implemented yet."
 		exit 1
 		cd bbb-recorder/
@@ -107,7 +145,7 @@ case $source in
 		tmp_filename=$(readlink -f "$tmp_filename")
 		cd ../
 		;;
-	3) # microsoft stream (teams)
+	"microsoft stream (teams)")
 		if [[ -f cookies/.token_cache ]]; then
 			cp -v cookies/.token_cache destreamer/
 			chown user:user destreamer/.token_cache
@@ -117,15 +155,16 @@ case $source in
 		tmp_filename=$(ls -t | grep -E "*.mp4$" | head -n1)
 		tmp_filename=$(readlink -f "$tmp_filename")
 		cd ../
+
 		cp -uv destreamer/.token_cache cookies/.token_cache
 		;;
-	4) # youtube static
+	"youtube video")
 		# tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
 		youtube-dl --fragment-retries infinite -f "$ytformat" "$url" -o "video.%(ext)s"
 		tmp_filename=$(ls -t | grep -E "video.*$" | head -n1)
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
-	5) # youtube livestream
+	"youtube livestream")
 		tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
 
 		set -m # SIGINT is ignored when job control is disabled!!!
@@ -140,12 +179,12 @@ case $source in
 
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
-	6) # sharepoint
+	"sharepoint (teams)")
 		tmp_filename="sharepoint_downloader/video"
-		$NODE_EXEC ./sharepoint_downloader/index.js -u "$username" -p "$password" -i "$url" -o "$tmp_filename"
+		$NODE_EXEC ./sharepoint_downloader/index.js -u "$cvut_username" -p "$cvut_password" -i "$url" -o "$tmp_filename"
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
-	7) # google drive
+	"google drive")
 		tmp_filename="video"
 		./gdown.pl/gdown.pl "$url" "$tmp_filename"
 		tmp_filename=$(readlink -f "$tmp_filename")
@@ -157,19 +196,14 @@ case $source in
 esac
 
 # upload
-[[ -z "$login" ]] && cp -v cookies/youtube.com.pkl youtube_uploader_selenium/
-cd youtube_uploader_selenium/
-python3 upload.py \
+python3 youtube_uploader_selenium/upload.py \
 	--video="$tmp_filename" \
-	--channel="UCzQzKzGlpX4qBi060qdwIug" \
-	--title="$subject $lecnum. $category1 ($datestr)$lectitle" \
-	--description="$description" \
-	--playlist="$subject $categoryN [$semester]" \
-	--privacy="unlisted" \
-	--username="$username" \
-	--password="$password" \
+	--channel="$channel" \
+	--title="$video_title" \
+	--description="$video_description" \
+	--playlist="$video_playlist" \
+	--privacy="$video_visibility" \
+	--cookies="$cache_path" \
 	--headless
-
-[[ -f youtube.com.pkl ]] && cp -uv youtube.com.pkl ../cookies/
 
 echo -e "\n\033[32mDONE\033[0m"

@@ -11,7 +11,7 @@ dpkg-reconfigure -f noninteractive tzdata && \
 apt-get clean
 
 # install dependencies
-RUN apt-get -y install git wget sudo
+RUN apt-get -y install git wget sudo fzf
 RUN apt-get -y install xvfb firefox-geckodriver firefox python3 python3-pip python3-venv
 RUN apt-get -y install nodejs npm ffmpeg
 RUN apt-get -y install libnss3 libgbm1
