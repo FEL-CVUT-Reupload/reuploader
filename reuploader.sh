@@ -10,6 +10,11 @@ mkdir -p "$cache_path/destreamer"
 mkdir -p "$cache_path/sharepoint"
 mkdir -p "$cache_path/uploader"
 
+# start the youtube login background job
+# job control is turned off by default in scripts (set +m)
+python3 youtube_uploader_selenium/login.py --channel="$channel" --username="a" --password="a" --cookies="$cache_path/uploader" --headless >/dev/null &
+YT_LOGIN_PID=$!
+
 while true; do
 	echo "Metadata template:"
 	types=("přednáška" "cvičení" "seminář" "<custom>")
@@ -96,22 +101,35 @@ else
 	fi
 
 	read -r -p "URL/URI: " -e url
+	echo
 fi
 
-echo
-echo "Logging in to YouTube..."
+# if there are any jobs...
+if [[ "$(jobs -r)" ]]; then
+	echo "Logging in to YouTube..."
+fi
+
+# wait for the youtube login job (or just get the exit code if it's finished already)
+set +e
+wait $YT_LOGIN_PID
+status=$?
+set -e
+
+# run the youtube login again if the background job failed
 while true; do
-	set +e
-	python3 youtube_uploader_selenium/login.py --channel="$channel" --username="$cvut_username" --password="$cvut_password" --cookies="$cache_path/uploader" --headless
-	status="$?"
-	set -e
 	if [[ "$status" == "7" ]]; then
-		read -r -p "ČVUT username: "   -e cvut_username
-		read -r -s -p "ČVUT password: "   -e cvut_password
+		read -r -p "ČVUT username: "  -e cvut_username
+		read -r -s -p "ČVUT password: "  -e cvut_password
 		echo
 	else
 		break
 	fi
+
+	echo "Logging in to YouTube..."
+	set +e
+	python3 youtube_uploader_selenium/login.py --channel="$channel" --username="$cvut_username" --password="$cvut_password" --cookies="$cache_path/uploader" --headless
+	status="$?"
+	set -e
 done
 
 # not bigger than 1080p, vp9 preferred
@@ -161,8 +179,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "7" ]]; then
-				read -r -p "ČVUT username: "   -e cvut_username
-				read -r -s -p "ČVUT password: "   -e cvut_password
+				read -r -p "ČVUT username: "  -e cvut_username
+				read -r -s -p "ČVUT password: "  -e cvut_password
 				echo
 			else
 				break
@@ -204,8 +222,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "7" ]]; then
-				read -r -p "ČVUT username: "   -e cvut_username
-				read -r -s -p "ČVUT password: "   -e cvut_password
+				read -r -p "ČVUT username: "  -e cvut_username
+				read -r -s -p "ČVUT password: "  -e cvut_password
 				echo
 			else
 				break
