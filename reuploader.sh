@@ -93,7 +93,7 @@ while true; do
 done
 
 if [[ -f "local_video" ]]; then
-	source=0
+	source="local file"
 	url="local_video"
 else
 	source=$(
