@@ -15,20 +15,34 @@ mkdir -p "$cache_path/uploader"
 python3 youtube_uploader_selenium/login.py --channel="$channel" --username="a" --password="a" --cookies="$cache_path/uploader" --headless >/dev/null &
 YT_LOGIN_PID=$!
 
+function sel() {
+	prompt="$1"
+	echo "$prompt" >&2
+	options=("${@:2}")
+	len="${#options[@]}"
+
+	set -e
+	selection="$(while true; do
+		IFS=$'\n' eval 'echo -e "${options[*]}"' | fzf --height="$((len + 1))" --reverse --color=16 --no-info
+		case "$?" in
+			0) break ;;
+			1) continue ;;
+			*) exit "$?" ;;
+		esac
+	done)"
+
+	echo -e "\e[A$prompt $selection" >&2
+	echo "$selection"
+}
+
 while true; do
-	echo "Metadata template:"
-	types=("přednáška" "cvičení" "seminář" "<custom>")
-	template=$(while ! IFS=$'\n' eval 'echo -e "${types[*]}"' | fzf --height=5 --reverse --color=16 --no-info; do true; done)
-	echo -e "\e[AVideo template: $template"
+	template=$(sel "Metadata template:" "přednáška" "cvičení" "seminář" "<custom>")
 
 	if [[ "$template" == "<custom>" ]]; then
 		read -r -p "Video title: " -e video_title
 		read -r -p "Video description: " -e video_description
 		read -r -p "Playlist: " -e video_playlist
-		echo "Video visibility:"
-		visibilities=("unlisted" "public" "private")
-		video_visibility=$(while ! IFS=$'\n' eval 'echo -e "${visibilities[*]}"' | fzf --height=4 --reverse --color=16 --no-info; do true; done)
-		echo -e "\e[AVideo visibility: $video_visibility"
+		video_visibility=$(sel "Video visibility:" "unlisted" "public" "private")
 	else
 		read -r -p "Subject code: " -e subject
 		read -r -p "Lecture number: " -e lecnum
@@ -82,8 +96,8 @@ if [[ -f "local_video" ]]; then
 	source=0
 	url="local_video"
 else
-	echo "Source:"
-	sources=(
+	source=$(
+		sel "Source:"
 		# "local file"
 		"any video url"
 		# "bbb internal player"
@@ -93,8 +107,6 @@ else
 		"youtube video"
 		"youtube livestream"
 	)
-	source=$(while ! IFS=$'\n' eval 'echo -e "${sources[*]}"' | fzf --height=7 --reverse --color=16 --no-info; do true; done)
-	echo -e "\e[ASource: $source"
 
 	if [[ "$source" == "youtube livestream" ]]; then
 		read -r -p "Recording time: " -i "2h" -e rectime
@@ -118,8 +130,8 @@ set -e
 # run the youtube login again if the background job failed
 while true; do
 	if [[ "$status" == "7" ]]; then
-		read -r -p "ČVUT username: "  -e cvut_username
-		read -r -s -p "ČVUT password: "  -e cvut_password
+		read -r -p "ČVUT username: " -e cvut_username
+		read -r -s -p "ČVUT password: " -e cvut_password
 		echo
 	else
 		break
@@ -179,8 +191,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "7" ]]; then
-				read -r -p "ČVUT username: "  -e cvut_username
-				read -r -s -p "ČVUT password: "  -e cvut_password
+				read -r -p "ČVUT username: " -e cvut_username
+				read -r -s -p "ČVUT password: " -e cvut_password
 				echo
 			else
 				break
@@ -222,8 +234,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "7" ]]; then
-				read -r -p "ČVUT username: "  -e cvut_username
-				read -r -s -p "ČVUT password: "  -e cvut_password
+				read -r -p "ČVUT username: " -e cvut_username
+				read -r -s -p "ČVUT password: " -e cvut_password
 				echo
 			else
 				break
