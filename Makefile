@@ -12,3 +12,6 @@ run:
 run-shell:
 	docker run -v reuploader:/mnt --rm -it reuploader bash
 
+clean-volume:
+	docker volume rm reuploader
+
