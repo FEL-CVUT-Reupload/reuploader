@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
+
+semester_default="LS 20/21"
+channel="UCzQzKzGlpX4qBi060qdwIug"
+cache_path="/mnt"
+
 NODE_EXEC=${NODE_EXEC:-"node"}
 
 set -e
+trap "stty sane" EXIT
 export LANG=C.UTF-8
 
-channel="UCzQzKzGlpX4qBi060qdwIug"
-cache_path="/mnt"
 mkdir -p "$cache_path/destreamer"
 mkdir -p "$cache_path/sharepoint"
 mkdir -p "$cache_path/uploader"
@@ -39,17 +43,17 @@ while true; do
 	template=$(sel "Metadata template:" "přednáška" "cvičení" "seminář" "<custom>")
 
 	if [[ "$template" == "<custom>" ]]; then
-		read -r -p "Video title: " -e video_title
-		read -r -p "Video description: " -e video_description
-		read -r -p "Playlist: " -e video_playlist
+		read -er -p "Video title: " video_title
+		read -er -p "Video description: " video_description
+		read -er -p "Playlist: " video_playlist
 		video_visibility=$(sel "Video visibility:" "unlisted" "public" "private")
 	else
-		read -r -p "Subject code: " -e subject
-		read -r -p "Lecture number: " -e lecnum
-		read -r -p "Date string: " -i "$(date +'%-d. %-m. %Y')" -e datestr
-		read -r -p "Semester: " -i "LS 20/21" -e semester
-		read -r -p "Lecture title: " -e lectitle
-		read -r -p "Video description: " -e video_description
+		read -er -p "Subject code: " subject
+		read -er -p "Lecture number: " lecnum
+		read -er -p "Date string: " -i "$(date +'%-d. %-m. %Y')" datestr
+		read -er -p "Semester: " -i "$semester_default" semester
+		read -er -p "Lecture title: " lectitle
+		read -er -p "Video description: " video_description
 
 		case "$template" in
 			"přednáška")
@@ -65,7 +69,7 @@ while true; do
 				categoryN="semináře"
 				;;
 			*)
-				echo -e "\033[31mUnknown lecture type!\033[0m"
+				echo -e "\033[31mUnknown lecture template!\033[0m"
 				exit 1
 				;;
 		esac
@@ -84,7 +88,7 @@ while true; do
 	echo "Visibility: $video_visibility"
 	echo -e "\033[0m"
 
-	read -p "Okay? [Y/n] " -n 1 -r
+	read -r -n 1 -p "Okay? [Y/n] "
 	echo
 	if [[ $REPLY =~ ^[YyJj]?$ ]]; then
 		break
@@ -105,14 +109,12 @@ else
 			"youtube video" \
 			"youtube livestream"
 	)
-	# "local file"
-	# "bbb internal player"
 
 	if [[ "$source" == "youtube livestream" ]]; then
 		read -r -p "Recording time: " -i "2h" -e rectime
 	fi
 
-	read -r -p "URL/URI: " -e url
+	read -er -p "URL/URI: " url
 	echo
 fi
 
@@ -130,8 +132,8 @@ set -e
 # run the youtube login again if the background job failed
 while true; do
 	if [[ "$status" == "7" ]]; then
-		read -r -p "ČVUT username: " -e cvut_username
-		read -r -s -p "ČVUT password: " -e cvut_password
+		read -er -p "ČVUT username: "  cvut_username
+		read -ers -p "ČVUT password: "  cvut_password
 		echo
 	else
 		break
@@ -161,8 +163,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "6" ]]; then
-				read -r -p "HTTP username: " -e http_username
-				read -r -s -p "HTTP password: " -e http_password
+				read -er -p "HTTP username: " http_username
+				read -ers -p "HTTP password: " http_password
 				echo
 			else
 				break
@@ -191,8 +193,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "7" ]]; then
-				read -r -p "ČVUT username: " -e cvut_username
-				read -r -s -p "ČVUT password: " -e cvut_password
+				read -er -p "ČVUT username: " cvut_username
+				read -ers -p "ČVUT password: " cvut_password
 				echo
 			else
 				break
@@ -234,8 +236,8 @@ case "$source" in
 			status="$?"
 			set -e
 			if [[ "$status" == "7" ]]; then
-				read -r -p "ČVUT username: " -e cvut_username
-				read -r -s -p "ČVUT password: " -e cvut_password
+				read -er -p "ČVUT username: " cvut_username
+				read -ers -p "ČVUT password: " cvut_password
 				echo
 			else
 				break
@@ -256,6 +258,7 @@ case "$source" in
 esac
 
 # upload
+echo
 python3 youtube_uploader_selenium/upload.py \
 	--video="$tmp_filename" \
 	--channel="$channel" \
