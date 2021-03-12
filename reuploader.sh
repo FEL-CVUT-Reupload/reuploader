@@ -97,16 +97,16 @@ if [[ -f "local_video" ]]; then
 	url="local_video"
 else
 	source=$(
-		sel "Source:"
-		# "local file"
-		"any video url"
-		# "bbb internal player"
-		"google drive"
-		"microsoft stream (teams)"
-		"sharepoint (teams)"
-		"youtube video"
-		"youtube livestream"
+		sel "Source:" \
+			"any video url" \
+			"google drive" \
+			"microsoft stream (teams)" \
+			"sharepoint (teams)" \
+			"youtube video" \
+			"youtube livestream"
 	)
+	# "local file"
+	# "bbb internal player"
 
 	if [[ "$source" == "youtube livestream" ]]; then
 		read -r -p "Recording time: " -i "2h" -e rectime
