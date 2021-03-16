@@ -40,7 +40,7 @@ function sel() {
 }
 
 while true; do
-	template=$(sel "Metadata template:" "přednáška" "cvičení" "seminář" "<custom>")
+	template=$(sel "Metadata template:" "přednáška" "cvičení" "seminář" "konzultace" "<custom>")
 
 	if [[ "$template" == "<custom>" ]]; then
 		read -er -p "Video title: " video_title
@@ -67,6 +67,10 @@ while true; do
 			"seminář")
 				category1="seminář"
 				categoryN="semináře"
+				;;
+			"konzultace")
+				category1="konzultace"
+				categoryN="konzultace"
 				;;
 			*)
 				echo -e "\033[31mUnknown lecture template!\033[0m"
@@ -132,8 +136,8 @@ set -e
 # run the youtube login again if the background job failed
 while true; do
 	if [[ "$status" == "7" ]]; then
-		read -er -p "ČVUT username: "  cvut_username
-		read -ers -p "ČVUT password: "  cvut_password
+		read -er -p "ČVUT username: " cvut_username
+		read -ers -p "ČVUT password: " cvut_password
 		echo
 	else
 		break
