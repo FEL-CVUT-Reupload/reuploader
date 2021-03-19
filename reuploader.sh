@@ -110,11 +110,11 @@ else
 			"google drive" \
 			"microsoft stream (teams)" \
 			"sharepoint (teams)" \
-			"youtube video" \
-			"youtube livestream"
+			"youtube-dl" \
+			"youtube-dl (livestream)"
 	)
 
-	if [[ "$source" == "youtube livestream" ]]; then
+	if [[ "$source" == "youtube-dl (livestream)" ]]; then
 		read -r -p "Recording time: " -i "2h" -e rectime
 	fi
 
@@ -210,17 +210,16 @@ case "$source" in
 
 		cd ../
 		;;
-	"youtube video")
-		# tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
-		youtube-dl --fragment-retries infinite -f "$ytformat" "$url" -o "video.%(ext)s"
+	"youtube-dl")
+		youtube-dl --fragment-retries infinite "$url" -o "video.%(ext)s"
 		tmp_filename=$(ls -t | grep -E "video.*$" | head -n1)
 		tmp_filename=$(readlink -f "$tmp_filename")
 		;;
-	"youtube livestream")
-		tmp_filename=$(youtube-dl -f "$ytformat" --get-filename "$url" -o "video.%(ext)s")
+	"youtube-dl (livestream)")
+		tmp_filename=$(youtube-dl --get-filename "$url" -o "video.%(ext)s")
 
 		set -m # SIGINT is ignored when job control is disabled!!!
-		youtube-dl --fragment-retries infinite -f "$ytformat" "$url" -o "video.%(ext)s" &
+		youtube-dl --fragment-retries infinite "$url" -o "video.%(ext)s" &
 		PID=$!
 		sleep "$rectime"
 		kill -INT $PID

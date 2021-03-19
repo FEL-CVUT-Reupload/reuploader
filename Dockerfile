@@ -44,6 +44,9 @@ RUN chown -R user:user /src/destreamer
 # install sharepoint downloader
 RUN git clone https://github.com/FEL-CVUT-Reupload/sharepoint_downloader.git
 
+# install youtube-dl
+RUN pip3 install youtube-dl
+
 # install yarn dependencies
 RUN yarn install
 RUN yarn workspace destreamer tsc
