@@ -31,18 +31,18 @@ RUN yarn set version berry
 RUN yarn plugin import workspace-tools
 
 # install youtube uploader
-RUN git clone https://github.com/FEL-CVUT-Reupload/youtube_uploader_selenium.git
+RUN git clone https://github.com/felwiki/youtube_uploader_selenium.git
 RUN pip3 install -r /src/youtube_uploader_selenium/requirements.txt
 
 # install google drive downloader
 RUN git clone https://github.com/circulosmeos/gdown.pl.git
 
 # install destreamer
-RUN git clone https://github.com/FEL-CVUT-Reupload/destreamer.git
+RUN git clone https://github.com/felwiki/destreamer.git
 RUN chown -R user:user /src/destreamer
 
 # install sharepoint downloader
-RUN git clone https://github.com/FEL-CVUT-Reupload/sharepoint_downloader.git
+RUN git clone https://github.com/felwiki/sharepoint_downloader.git
 
 # install youtube-dl
 RUN pip3 install youtube-dl
